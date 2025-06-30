@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/raam2912/sheelaa-chatbot-frontend/static/css/main.25870ef6.css",
+    "main.js": "/raam2912/sheelaa-chatbot-frontend/static/js/main.f22418a2.js",
+    "index.html": "/raam2912/sheelaa-chatbot-frontend/index.html",
+    "main.25870ef6.css.map": "/raam2912/sheelaa-chatbot-frontend/static/css/main.25870ef6.css.map",
+    "main.f22418a2.js.map": "/raam2912/sheelaa-chatbot-frontend/static/js/main.f22418a2.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.25870ef6.css",
+    "static/js/main.f22418a2.js"
+  ]
+}
