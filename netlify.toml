@@ -1,0 +1,8 @@
+# netlify.toml
+[build]
+  command = "npm install && CI=false npm run build"
+  publish = "build"
+
+[build.environment]
+  NODE_VERSION = "20"
+  REACT_APP_BACKEND_URL = "YOUR_RENDER_BACKEND_URL_HERE" # IMPORTANT: Replace with your actual Render URL
