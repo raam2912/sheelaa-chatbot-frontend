@@ -5,4 +5,4 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  REACT_APP_BACKEND_URL = "YOUR_RENDER_BACKEND_URL_HERE" # IMPORTANT: Replace with your actual Render URL
+  REACT_APP_BACKEND_URL = "https://sheelaa-chatbot-backend.onrender.com" 
