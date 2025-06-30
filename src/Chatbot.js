@@ -1,158 +1,170 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquareText, Send, X, Loader2, Bot, User } from 'lucide-react'; // Icons for UI
+import { ChevronDown, MessageSquareMore } from 'lucide-react'; // Assuming lucide-react for icons
+
+// Use environment variable for deployed backend URL, fallback to local for development
+// IMPORTANT: Ensure REACT_APP_BACKEND_URL is set on Netlify to your Render backend URL (e.g., https://your-backend.onrender.com)
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://127.0.0.1:5000';
 
 function Chatbot() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const [messages, setMessages] = useState([]);
+    const [input, setInput] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
+    const messagesEndRef = useRef(null);
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://127.0.0.1:5000';
+    // Scroll to the latest message
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
 
-  // Scroll to the latest message
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // Initial welcome message
+    useEffect(() => {
+        if (isOpen && messages.length === 0) {
+            setMessages([
+                { sender: 'bot', text: "Hello! I'm Sheelaa's AI Assistant. How can I help you today? I can tell you about Sheelaa's services, contact details, or her background." }
+            ]);
+        }
+    }, [isOpen, messages.length]);
 
-  // Initial welcome message when chatbot opens
-  useEffect(() => {
-    if (isOpen && messages.length === 0) {
-      setMessages([
-        { type: 'bot', text: "Hello! I'm Sheelaa's AI Assistant. How can I help you today? I can tell you about Sheelaa's services, contact details, or her background." }
-      ]);
-    }
-  }, [isOpen, messages.length]);
+    const toggleChat = () => {
+        setIsOpen(!isOpen);
+    };
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (input.trim() === '') return;
+    const handleInputChange = (e) => {
+        setInput(e.target.value);
+    };
 
-    const userMessage = input.trim();
-    setMessages((prevMessages) => [...prevMessages, { type: 'user', text: userMessage }]);
-    setInput('');
-    setIsLoading(true);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (input.trim() === '') return;
 
-    try {
-      const response = await fetch(`${BACKEND_URL}/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: userMessage }),
-      });
+        const userMessage = { sender: 'user', text: input };
+        setMessages((prevMessages) => [...prevMessages, userMessage]);
+        setInput('');
+        setIsTyping(true);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+        try {
+            // Send message to the backend
+            const response = await fetch(`${BACKEND_URL}/chat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: input }),
+            });
 
-      const data = await response.json();
-      setMessages((prevMessages) => [...prevMessages, { type: 'bot', text: data.response }]);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      setMessages((prevMessages) => [...prevMessages, { type: 'bot', text: "Oops! Something went wrong. Please try again later or contact Sheelaa directly." }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+            if (!response.ok) {
+                // If response is not OK (e.g., 404, 500), throw an error
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
 
-  return (
-    // Chatbot container fixed at the bottom right
-    <div className="fixed bottom-4 right-4 z-50 font-inter">
-      {!isOpen && (
-        // Chatbot toggle button
-        <button
-          onClick={() => setIsOpen(true)}
-          className="bg-primary text-white p-4 rounded-full shadow-lg hover:bg-primary/90 transition-all duration-300 flex items-center justify-center"
-          aria-label="Open Chatbot"
-        >
-          <MessageSquareText size={28} />
-        </button>
-      )}
+            const data = await response.json();
+            const botMessage = { sender: 'bot', text: data.response };
+            setMessages((prevMessages) => [...prevMessages, botMessage]);
+        } catch (error) {
+            console.error('Error sending message to backend:', error);
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                { sender: 'bot', text: 'Oops! Something went wrong. Please try again later or contact Sheelaa directly.' },
+            ]);
+        } finally {
+            setIsTyping(false);
+        }
+    };
 
-      {isOpen && (
-        // Chatbot window
-        <div className="bg-white rounded-xl shadow-2xl w-80 md:w-96 h-[500px] flex flex-col overflow-hidden border border-gray-200">
-          {/* Chatbot Header */}
-          <div className="bg-primary text-white p-4 flex items-center justify-between rounded-t-xl shadow-md">
-            <div className="flex items-center">
-              <Bot size={24} className="mr-2" />
-              <h3 className="text-lg font-semibold">Sheelaa AI Assistant</h3>
-            </div>
+    return (
+        <div className="fixed bottom-4 right-4 z-50">
+            {/* Chatbot Toggle Button */}
             <button
-              onClick={() => setIsOpen(false)}
-              className="text-white hover:bg-primary/80 p-1 rounded-full transition-colors duration-200"
-              aria-label="Close Chatbot"
+                onClick={toggleChat}
+                className="bg-purple-600 text-white p-3 rounded-full shadow-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75 transition-all duration-300 ease-in-out transform hover:scale-105"
+                aria-label="Toggle Chat"
             >
-              <X size={20} />
+                <MessageSquareMore size={28} />
             </button>
-          </div>
 
-          {/* Chat Messages Area */}
-          <div className="flex-1 p-4 overflow-y-auto chat-messages-container">
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex mb-3 ${
-                  msg.type === 'user' ? 'justify-end' : 'justify-start'
-                }`}
-              >
-                <div
-                  className={`max-w-[75%] p-3 rounded-lg shadow-sm ${
-                    msg.type === 'user'
-                      ? 'bg-blue-500 text-white rounded-br-none'
-                      : 'bg-gray-100 text-gray-800 rounded-bl-none'
-                  }`}
-                >
-                  <div className="flex items-center mb-1">
-                    {msg.type === 'bot' && <Bot size={16} className="mr-1 text-primary" />}
-                    {msg.type === 'user' && <User size={16} className="mr-1 text-white" />}
-                    <span className="font-medium text-sm">
-                      {msg.type === 'user' ? 'You' : 'Sheelaa Bot'}
-                    </span>
-                  </div>
-                  <p className="text-sm leading-relaxed">{msg.text}</p>
+            {/* Chat Window */}
+            {isOpen && (
+                <div className="fixed bottom-20 right-4 w-80 h-[400px] bg-white rounded-lg shadow-xl flex flex-col overflow-hidden border border-gray-200">
+                    {/* Chat Header */}
+                    <div className="bg-purple-600 text-white p-4 flex justify-between items-center rounded-t-lg">
+                        <h3 className="font-semibold text-lg">Sheelaa AI Assistant</h3>
+                        <button
+                            onClick={toggleChat}
+                            className="text-white hover:text-gray-200 focus:outline-none"
+                            aria-label="Close Chat"
+                        >
+                            <ChevronDown size={20} />
+                        </button>
+                    </div>
+
+                    {/* Chat Messages Area */}
+                    <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
+                        {messages.map((msg, index) => (
+                            <div
+                                key={index}
+                                className={`mb-3 p-2 rounded-lg max-w-[80%] ${
+                                    msg.sender === 'user'
+                                        ? 'bg-blue-100 text-blue-800 ml-auto rounded-br-none'
+                                        : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                                }`}
+                            >
+                                {msg.text}
+                            </div>
+                        ))}
+                        {isTyping && (
+                            <div className="mb-3 p-2 rounded-lg max-w-[80%] bg-gray-100 text-gray-600 rounded-bl-none animate-pulse">
+                                Sheelaa Bot is typing...
+                            </div>
+                        )}
+                        <div ref={messagesEndRef} /> {/* For auto-scrolling */}
+                    </div>
+
+                    {/* Chat Input */}
+                    <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200 bg-white">
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={handleInputChange}
+                            placeholder="Type your message..."
+                            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            disabled={isTyping}
+                        />
+                        <button
+                            type="submit"
+                            className="hidden" // Hidden button, submission via Enter key
+                            disabled={isTyping}
+                        >
+                            Send
+                        </button>
+                    </form>
                 </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex justify-start mb-3">
-                <div className="max-w-[75%] p-3 rounded-lg shadow-sm bg-gray-100 text-gray-800 rounded-bl-none flex items-center">
-                  <Loader2 size={16} className="animate-spin mr-2 text-primary" />
-                  <span className="text-sm">Typing...</span>
-                </div>
-              </div>
             )}
-            <div ref={messagesEndRef} /> {/* Scroll target */}
-          </div>
 
-          {/* Chat Input Area */}
-          <form onSubmit={sendMessage} className="p-4 border-t border-gray-200 bg-gray-50 flex items-center">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent mr-2 text-sm"
-              disabled={isLoading}
-            />
-            <button
-              type="submit"
-              className="bg-primary text-white p-2 rounded-lg hover:bg-primary/90 transition-colors duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={isLoading}
-              aria-label="Send Message"
-            >
-              <Send size={20} />
-            </button>
-          </form>
+            {/* Custom Scrollbar Styling (for custom-scrollbar class) */}
+            <style jsx>{`
+                .custom-scrollbar::-webkit-scrollbar {
+                    width: 8px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #888;
+                    border-radius: 10px;
+                }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: #555;
+                }
+            `}</style>
         </div>
-      )}
-    </div>
-  );
+    );
 }
 
 export default Chatbot;
