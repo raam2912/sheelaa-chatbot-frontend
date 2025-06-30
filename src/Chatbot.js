@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquareMore, Mic, Volume2, VolumeX, X } from 'lucide-react'; // Added Mic, Volume2, VolumeX, X icons
 
-// Use environment variable for deployed backend URL, fallback to local for development
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://127.0.0.1:5000';
+// IMPORTANT: Hardcoded the Render backend URL for GitHub Pages deployment.
+// GitHub Pages is a static host and does not process environment variables like Netlify.
+const BACKEND_URL = 'https://sheelaa-chatbot-backend.onrender.com';
 
 function Chatbot() {
     const [isOpen, setIsOpen] = useState(false);
