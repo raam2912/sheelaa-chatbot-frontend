@@ -8,8 +8,7 @@ function Chatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Replace with your backend URL
-  const BACKEND_URL = 'http://127.0.0.1:5000';
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://127.0.0.1:5000';
 
   // Scroll to the latest message
   const scrollToBottom = () => {
