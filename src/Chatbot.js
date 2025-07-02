@@ -1,5 +1,5 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from 'react'; // Added useCallback
-import { MessageSquareMore, Mic, Volume2, VolumeX, X, Maximize2, Minimize2 } from 'lucide-react'; // Removed 'Move'
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { MessageSquareMore, Mic, Volume2, VolumeX, X, Maximize2, Minimize2 } from 'lucide-react';
 
 // IMPORTANT: Hardcoded the Render backend URL for GitHub Pages deployment.
 const BACKEND_URL = 'https://sheelaa-chatbot-backend.onrender.com';
@@ -13,7 +13,7 @@ function Chatbot() {
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [voiceEnabled, setVoiceEnabled] = useState(true);
 
-    // NEW: States for advanced UI (particles, energy orbs, maximize, drag)
+    // States for advanced UI (particles, energy orbs, maximize, drag)
     const [particles, setParticles] = useState([]);
     const [energyOrbs, setEnergyOrbs] = useState([]);
     const [isMaximized, setIsMaximized] = useState(false);
@@ -32,7 +32,7 @@ function Chatbot() {
     // Initialize position of the widget
     useEffect(() => {
         // Set initial position to bottom right, adjusted for button size
-        const buttonSize = 80; // Defined here for consistent use
+        const buttonSize = 80;
         setPosition({
             x: window.innerWidth - buttonSize - 20, // buttonSize px width, 20px right margin
             y: window.innerHeight - buttonSize - 20 // buttonSize px height, 20px bottom margin
@@ -127,11 +127,12 @@ function Chatbot() {
 
         e.preventDefault();
         const buttonSize = 80; // Use buttonSize here
+        // Removed 'position' from Math.min calculation as dragStart already accounts for it
         const newX = Math.max(0, Math.min(window.innerWidth - buttonSize, e.clientX - dragStart.x));
         const newY = Math.max(0, Math.min(window.innerHeight - buttonSize, e.clientY - dragStart.y));
 
         setPosition({ x: newX, y: newY });
-    }, [isDragging, isOpen, isAnimating, dragStart, position]); // Added position to dependencies
+    }, [isDragging, isOpen, isAnimating, dragStart]); // Removed 'position' from dependencies
 
     // Use useCallback for handleMouseUp to make it a stable dependency
     const handleMouseUp = useCallback(() => {
@@ -187,7 +188,7 @@ function Chatbot() {
 
             recognitionRef.current.onerror = (event) => {
                 setIsListening(false);
-                console.error('Speech recognition error:', event.error);
+                console.error('Speech recognition error:', event);
                 if (event.error === 'not-allowed') {
                     alert('Microphone access denied. Please enable it in your browser settings.');
                 }
@@ -335,12 +336,12 @@ function Chatbot() {
         if (isMaximized) {
             return {
                 position: 'fixed',
-                top: '2vh',          // Reduced from 5vh
-                left: '2vw',         // Reduced from 5vw
-                width: '96vw',       // Increased from 90vw
-                height: '96vh',      // Increased from 90vh
+                top: '2vh',
+                left: '2vw',
+                width: '96vw',
+                height: '96vh',
                 transform: 'none',
-                zIndex: 9999         // Ensure it's on top
+                zIndex: 9999
             };
         } else {
             // Calculate position relative to button
