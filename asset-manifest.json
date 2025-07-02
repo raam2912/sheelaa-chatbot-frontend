@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/sheelaa-chatbot-frontend/static/css/main.2f8232a4.css",
-    "main.js": "/sheelaa-chatbot-frontend/static/js/main.961c26ac.js",
+    "main.css": "/sheelaa-chatbot-frontend/static/css/main.485ab81a.css",
+    "main.js": "/sheelaa-chatbot-frontend/static/js/main.db4e81d3.js",
     "index.html": "/sheelaa-chatbot-frontend/index.html",
-    "main.2f8232a4.css.map": "/sheelaa-chatbot-frontend/static/css/main.2f8232a4.css.map",
-    "main.961c26ac.js.map": "/sheelaa-chatbot-frontend/static/js/main.961c26ac.js.map"
+    "main.485ab81a.css.map": "/sheelaa-chatbot-frontend/static/css/main.485ab81a.css.map",
+    "main.db4e81d3.js.map": "/sheelaa-chatbot-frontend/static/js/main.db4e81d3.js.map"
   },
   "entrypoints": [
-    "static/css/main.2f8232a4.css",
-    "static/js/main.961c26ac.js"
+    "static/css/main.485ab81a.css",
+    "static/js/main.db4e81d3.js"
   ]
 }
