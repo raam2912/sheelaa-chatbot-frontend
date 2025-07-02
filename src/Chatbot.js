@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-// Added Move, Maximize2, Minimize2 for drag and maximize functionality
-import { MessageSquareMore, Mic, Volume2, VolumeX, X, Move, Maximize2, Minimize2 } from 'lucide-react';
+﻿import React, { useState, useEffect, useRef, useCallback } from 'react'; // Added useCallback
+import { MessageSquareMore, Mic, Volume2, VolumeX, X, Maximize2, Minimize2 } from 'lucide-react'; // Removed 'Move'
 
 // IMPORTANT: Hardcoded the Render backend URL for GitHub Pages deployment.
 const BACKEND_URL = 'https://sheelaa-chatbot-backend.onrender.com';
@@ -33,9 +32,10 @@ function Chatbot() {
     // Initialize position of the widget
     useEffect(() => {
         // Set initial position to bottom right, adjusted for button size
+        const buttonSize = 80; // Defined here for consistent use
         setPosition({
-            x: window.innerWidth - 80 - 20, // 80px button width, 20px right margin
-            y: window.innerHeight - 80 - 20 // 80px button height, 20px bottom margin
+            x: window.innerWidth - buttonSize - 20, // buttonSize px width, 20px right margin
+            y: window.innerHeight - buttonSize - 20 // buttonSize px height, 20px bottom margin
         });
     }, []);
 
@@ -93,9 +93,10 @@ function Chatbot() {
     // Handle window resize to keep widget in bounds
     useEffect(() => {
         const handleResize = () => {
+            const buttonSize = 80;
             setPosition(prev => ({
-                x: Math.min(prev.x, window.innerWidth - 80), // Adjusted for 80px button size
-                y: Math.min(prev.y, window.innerHeight - 80) // Adjusted for 80px button size
+                x: Math.min(prev.x, window.innerWidth - buttonSize),
+                y: Math.min(prev.y, window.innerHeight - buttonSize)
             }));
         };
 
@@ -119,24 +120,27 @@ function Chatbot() {
         });
     };
 
-    const handleMouseMove = (e) => {
+    // Use useCallback for handleMouseMove to make it a stable dependency
+    const handleMouseMove = useCallback((e) => {
         // Prevent drag if not dragging, or if chat is open/animating
         if (!isDragging || isOpen || isAnimating) return;
 
         e.preventDefault();
-        // Improved drag bounds calculation: 80px for button size
-        const newX = Math.max(0, Math.min(window.innerWidth - 80, e.clientX - dragStart.x));
-        const newY = Math.max(0, Math.min(window.innerHeight - 80, e.clientY - dragStart.y));
+        const buttonSize = 80; // Use buttonSize here
+        const newX = Math.max(0, Math.min(window.innerWidth - buttonSize, e.clientX - dragStart.x));
+        const newY = Math.max(0, Math.min(window.innerHeight - buttonSize, e.clientY - dragStart.y));
 
         setPosition({ x: newX, y: newY });
-    };
+    }, [isDragging, isOpen, isAnimating, dragStart, position]); // Added position to dependencies
 
-    const handleMouseUp = () => {
+    // Use useCallback for handleMouseUp to make it a stable dependency
+    const handleMouseUp = useCallback(() => {
         setIsDragging(false);
-    };
+    }, []);
 
     useEffect(() => {
-        if (isDragging && !isOpen && !isAnimating) { // Only add listeners if actively dragging and not open/animating
+        // Only add listeners if actively dragging and not open/animating
+        if (isDragging && !isOpen && !isAnimating) {
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
             document.body.style.userSelect = 'none'; // Prevent text selection during drag
@@ -146,7 +150,7 @@ function Chatbot() {
                 document.body.style.userSelect = ''; // Re-enable text selection
             };
         }
-    }, [isDragging, dragStart, position, isOpen, isAnimating]); // Added isAnimating to dependencies
+    }, [isDragging, isOpen, isAnimating, handleMouseMove, handleMouseUp]); // Dependencies now include handleMouseMove and handleMouseUp
 
     // Scroll to the latest message
     const scrollToBottom = () => {
@@ -200,6 +204,26 @@ function Chatbot() {
         };
     }, []);
 
+    // Use useCallback for speakText to make it a stable dependency
+    const speakText = useCallback((text) => {
+        if (!voiceEnabled || !('speechSynthesis' in window)) {
+            console.warn('Text-to-speech not enabled or not supported.');
+            return;
+        }
+
+        speechSynthesis.cancel();
+        setIsSpeaking(true);
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US'; // Default language for TTS
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = (event) => {
+            console.error('SpeechSynthesisUtterance error:', event);
+            setIsSpeaking(false);
+        };
+        speechSynthesis.speak(utterance);
+    }, [voiceEnabled]); // speakText depends on voiceEnabled
+
     // Initial welcome message and automatic voice reply
     useEffect(() => {
         if (isOpen && messages.length === 0) {
@@ -212,7 +236,7 @@ function Chatbot() {
                 speakText(welcomeMessage.text);
             }
         }
-    }, [isOpen, messages.length, voiceEnabled]); // speakText is now a stable function, so it's fine here
+    }, [isOpen, messages.length, voiceEnabled, speakText]); // Now speakText is a stable dependency
 
     // Toggle Chat function with animation prevention and cleanup
     const toggleChat = () => {
@@ -242,26 +266,6 @@ function Chatbot() {
 
     const handleInputChange = (e) => {
         setInput(e.target.value);
-    };
-
-    // speakText is now a stable function, no longer dependent on selectedVoice, pitch, rate
-    const speakText = (text) => {
-        if (!voiceEnabled || !('speechSynthesis' in window)) {
-            console.warn('Text-to-speech not enabled or not supported.');
-            return;
-        }
-
-        speechSynthesis.cancel();
-        setIsSpeaking(true);
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'en-US'; // Default language for TTS
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = (event) => {
-            console.error('SpeechSynthesisUtterance error:', event);
-            setIsSpeaking(false);
-        };
-        speechSynthesis.speak(utterance);
     };
 
     const handleSubmit = async (e) => {
@@ -342,7 +346,7 @@ function Chatbot() {
             // Calculate position relative to button
             const chatWidth = 384; // w-96 = 384px
             const chatHeight = 500; // h-[500px]
-            const buttonSize = 80; // w-20 / h-20 for the button
+            const buttonSize = 80; // w-20 / h-20 for the button (used consistently)
 
             let chatX = position.x;
             let chatY = position.y - chatHeight - 20; // 20px margin above button
@@ -525,7 +529,7 @@ function Chatbot() {
                                         rgba(255, 255, 255, 0.95) 0%,
                                         rgba(248, 250, 252, 0.98) 25%,
                                         rgba(241, 245, 249, 0.95) 50%,
-                                                                        rgba(255, 255, 255, 0.98) 75%,
+                                        rgba(255, 255, 255, 0.98) 75%,
                                         rgba(248, 250, 252, 0.95) 100%
                                     )`,
                                 backgroundSize: '400% 400%',
